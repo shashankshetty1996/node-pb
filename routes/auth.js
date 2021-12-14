@@ -1,14 +1,10 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+
+const { users } = require("../models/auth");
 const { JWT_SECRET_KEY } = require("../constants");
 
 const router = express.Router();
-
-const users = [
-	{ id: 1, username: "zuber", password: "1234@zuber" },
-	{ id: 2, username: "soumya", password: "soumyaissleeping" },
-	{ id: 3, username: "test", password: "1234" },
-];
 
 const jwtConfig = { expiresIn: "2min" };
 
@@ -38,14 +34,14 @@ router.post("/", (req, res) => {
 
 	const payload = { userId: user.id };
 	try {
-		const token = jwt.sign(payload, secretKey, jwtConfig);
+		const token = jwt.sign(payload, JWT_SECRET_KEY, jwtConfig);
 		res.json({
 			success: true,
 			message: "login successfully",
 			data: { token },
 		});
 	} catch (error) {
-		res.status(501).json({
+		res.status(504).json({
 			success: false,
 			message: "ERROR: while generating token",
 			data: error,
@@ -64,14 +60,15 @@ router.get("/verify-token", (req, res) => {
 	if (authorization === undefined) {
 		res.status(400).json({
 			success: false,
-			message: "ERROR: Invalid Auth header",
+			message: "ERROR: authorization header missing",
 		});
+		return;
 	}
 
 	const [, token] = authorization.split(" ");
 
 	try {
-		const payload = jwt.verify(token, secretKey);
+		const payload = jwt.verify(token, JWT_SECRET_KEY);
 		res.json({
 			success: true,
 			message: "login successfully",
@@ -80,7 +77,7 @@ router.get("/verify-token", (req, res) => {
 	} catch (error) {
 		res.status(403).json({
 			success: false,
-			message: "ERROR: Invalid",
+			message: "ERROR: Invalid token",
 			data: error,
 		});
 	}

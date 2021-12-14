@@ -1,34 +1,16 @@
 const express = require("express");
 const { blogs } = require("../models/blogs");
-const { JWT_SECRET_KEY } = require("../constants");
+const verifyToken = require("../middleware/verifyToken");
 
 const router = express.Router();
 
 /**
  * @description Fetching all the blogs
  * @method GET
- * @listens /api/v1/blogs
+ * @listens /api/v1/blogs/all
  */
-router.get("/", (req, res) => {
+router.get("/all", verifyToken, (req, res) => {
 	const limit = req.query.limit;
-	const { authorization } = req.headers;
-	if (authorization === undefined) {
-		res.status(400).json({
-			success: false,
-			message: "ERROR: Invalid Auth header",
-		});
-	}
-	const [, token] = authorization.split(" ");
-
-	try {
-		jwt.verify(token, secretKey);
-	} catch (error) {
-		res.status(403).json({
-			success: false,
-			message: "ERROR: Invalid user",
-			data: error,
-		});
-	}
 
 	if (limit && limit <= 0) {
 		res.status(400).json({
@@ -42,6 +24,30 @@ router.get("/", (req, res) => {
 	res
 		.status(200)
 		.json({ success: true, message: "Fetched all blogs!!!", data: blogSlice });
+});
+
+/**
+ * @description Fetching all the blogs by the author
+ * @method GET
+ * @listens /api/v1/blogs/
+ */
+router.get("/", verifyToken, (req, res) => {
+	const limit = req.query.limit;
+	const { userId } = req.auth || {};
+
+	const blogsByMe = blogs.filter((blog) => blog.userId === userId);
+
+	if (limit && limit <= 0) {
+		res.status(400).json({
+			success: false,
+			message: "invalid limit",
+		});
+		return;
+	}
+
+	res
+		.status(200)
+		.json({ success: true, message: "Fetched all blogs!!!", data: blogsByMe });
 });
 
 /**
