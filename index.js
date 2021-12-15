@@ -8,7 +8,7 @@ const { name, address } = require("./modules/user");
 
 console.log(`name: ${name} with address: ${address}`);
 
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log("Started express server on port " + PORT));
 // server.listen(PORT, () => console.log("Started Server on port " + PORT));
 
